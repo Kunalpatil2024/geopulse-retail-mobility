@@ -1,0 +1,30 @@
+{
+  "type": "FeatureCollection",
+  "name": "nashik_commercial_zones",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"zone_id": "zone_cbd", "zone_name": "Central Business District", "zone_type": "commercial"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[73.778,19.985],[73.800,19.985],[73.800,20.010],[73.778,20.010],[73.778,19.985]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"zone_id": "zone_east", "zone_name": "East Commercial Corridor", "zone_type": "commercial"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[73.800,19.995],[73.825,19.995],[73.825,20.020],[73.800,20.020],[73.800,19.995]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"zone_id": "zone_west", "zone_name": "West Retail Corridor", "zone_type": "commercial"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[73.760,19.985],[73.778,19.985],[73.778,20.005],[73.760,20.005],[73.760,19.985]]]
+      }
+    }
+  ]
+}

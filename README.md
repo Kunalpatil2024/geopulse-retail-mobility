@@ -40,3 +40,11 @@ GeoPulse analyzes anonymized mobile GPS pings to show how foot traffic flows thr
 ## Workflow
 
 Use one branch per member and merge changes via Pull Request. Commit style: `feat:`, `fix:`, `docs:`, or `chore:`.
+
+## M1: data synthesis and Snowflake
+
+Generate the default Nashik mobility dataset with
+`python data_synthesis\generate_pings.py`. The command writes chunked Parquet
+files under `data\pings\` and refreshes the 1,000-row CSV example in `docs\`.
+Snowflake table setup, store/zoning seed data, and the staged Parquet load steps
+are documented in [docs/data_synthesis.md](docs/data_synthesis.md).

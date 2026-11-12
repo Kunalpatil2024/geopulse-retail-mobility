@@ -1,0 +1,3 @@
+store_id,store_name,status,lat,long,catchment_radius_m
+store_a,Store A,existing,19.9975,73.7898,250
+store_b,Store B,proposed,20.0010,73.7898,250
