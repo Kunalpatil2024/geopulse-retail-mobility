@@ -10,9 +10,6 @@ import re
 import time
 from typing import Mapping
 
-from dotenv import load_dotenv
-
-
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PING_DIR = REPOSITORY_ROOT / "data" / "pings"
 STORES_PATH = REPOSITORY_ROOT / "docs" / "store_locations.csv"
@@ -34,6 +31,8 @@ def load_snowflake_config(
 ) -> dict[str, str]:
     """Load and validate connector options without exposing credential values."""
     if environ is None:
+        from dotenv import load_dotenv
+
         load_dotenv(env_file or REPOSITORY_ROOT / ".env")
         environ = os.environ
 

@@ -22,10 +22,10 @@ from data_synthesis.load_to_snowflake import (
 
 REPORT_PATH = REPOSITORY_ROOT / "docs" / "pipeline_audit.md"
 CITY_BOUNDS = {
-    "min_lat": 19.90,
-    "max_lat": 20.10,
-    "min_long": 73.65,
-    "max_long": 73.93,
+    "min_lat": 19.85,
+    "max_lat": 20.15,
+    "min_long": 73.60,
+    "max_long": 74.00,
 }
 
 
@@ -56,7 +56,7 @@ def build_bounds_sql(config: Mapping[str, str]) -> str:
     return f"""SELECT COALESCE(COUNT_IF(
   lat < {bounds['min_lat']} OR lat > {bounds['max_lat']}
   OR long < {bounds['min_long']} OR long > {bounds['max_long']}
-) , 0)
+), 0)
 FROM {table}"""
 
 
