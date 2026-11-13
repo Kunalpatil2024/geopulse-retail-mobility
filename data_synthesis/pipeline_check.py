@@ -36,7 +36,7 @@ def count_local_parquet_rows(files: list[Path]) -> int:
 def build_counts_sql(config: Mapping[str, str]) -> str:
     table = _qualified_name(config, "MOBILE_PINGS")
     return (
-        f"SELECT COUNT(*), COUNT_IF(location IS NULL) "
+        f"SELECT COUNT(*), COALESCE(COUNT_IF(location IS NULL), 0) "
         f"FROM {table}"
     )
 
@@ -185,7 +185,7 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(str(exc)) from exc
 
     for name, passed, details in results:
-        print(f"{'PASS' if passed else 'FAIL'}: {name} — {details}")
+        print(f"{'PASS' if passed else 'FAIL'}: {name} - {details}")
     print(f"Audit report: {args.report}")
     print(f"Audit time: {time.perf_counter() - started:.2f}s")
     return 0 if all(passed for _, passed, _ in results) else 1

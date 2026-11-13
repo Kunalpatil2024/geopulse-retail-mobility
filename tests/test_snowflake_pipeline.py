@@ -108,7 +108,7 @@ def test_loader_sql_matches_setup_tables_and_spatial_column_conventions():
 
 
 def test_audit_sql_covers_counts_bounds_hourly_traffic_and_store_distance():
-    assert "COUNT_IF(location IS NULL)" in build_counts_sql(CONFIG)
+    assert "COALESCE(COUNT_IF(location IS NULL), 0)" in build_counts_sql(CONFIG)
     assert "DATE_PART('HOUR', timestamp_utc)" in build_hourly_counts_sql(CONFIG)
     assert "73.6" in build_bounds_sql(CONFIG)
     proximity_sql = build_store_proximity_sql(CONFIG)

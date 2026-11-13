@@ -46,5 +46,19 @@ Use one branch per member and merge changes via Pull Request. Commit style: `fea
 Generate the default Nashik mobility dataset with
 `python data_synthesis\generate_pings.py`. The command writes chunked Parquet
 files under `data\pings\` and refreshes the 1,000-row CSV example in `docs\`.
-Snowflake table setup, store/zoning seed data, and the staged Parquet load steps
-are documented in [docs/data_synthesis.md](docs/data_synthesis.md).
+See [docs/SNOWFLAKE_SETUP.md](docs/SNOWFLAKE_SETUP.md) for Snowflake trial
+setup, table creation, credentials, loading, and the pipeline audit.
+
+### Load and verify
+
+After configuring `.env` and generating the Parquet files, load the raw
+Snowflake tables and run the audit:
+
+```powershell
+python data_synthesis\load_to_snowflake.py
+python data_synthesis\pipeline_check.py
+```
+
+The loader prints row counts and elapsed time. The audit prints PASS/FAIL
+checks and writes `docs/pipeline_audit.md`; see the setup guide for
+`--truncate` and `--force` behavior.

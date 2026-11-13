@@ -32,25 +32,9 @@ in [`commercial_zones.geojson`](commercial_zones.geojson).
 
 ## Snowflake setup and load
 
-1. Copy `.env.example` to `.env`, enter the Snowflake account credentials, and
-   create/use the `GEOPULSE` database and a role with schema, table, and stage
-   permissions.
-2. Execute [`snowflake_setup.sql`](snowflake_setup.sql) in Snowflake. It creates
-   raw ping, store, and commercial-zone tables with `GEOGRAPHY` columns and
-   idempotently seeds the two sites and three zones.
-3. Generate Parquet parts, then from SnowSQL upload them to the internal stage:
-
-   ```sql
-   PUT file://C:\absolute\path\to\geopulse-retail-mobility\data\pings\part-*.parquet
-     @GEOPULSE.RAW.PING_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
-   ```
-
-4. Run the `COPY INTO GEOPULSE.RAW.MOBILE_PINGS` statement at the end of the SQL
-   file. It converts Parquet fields and creates each ping's geography point from
-   longitude/latitude. Snowflake's load history prevents reloading the same
-   staged files unless they are force-loaded; avoid force-loading to prevent
-   duplicates.
-
-The same SQL file defines each raw ping's scalar coordinates alongside its
-`GEOGRAPHY` point, keeping the data straightforward to inspect and spatially
-query.
+For trial signup, account identifiers, database/table setup, credential
+configuration, and the repeatable loader/audit commands, follow the
+[Snowflake setup guide](SNOWFLAKE_SETUP.md). Run
+[`snowflake_setup.sql`](snowflake_setup.sql) before the loader; it defines the
+`GEOPULSE.RAW.MOBILE_PINGS`, `STORES`, and `COMMERCIAL_ZONES` tables used by the
+scripts here.
