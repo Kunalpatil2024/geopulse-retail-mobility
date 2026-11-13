@@ -1,5 +1,5 @@
-pandas
-numpy
-pyarrow
-snowflake-connector-python
+snowflake-connector-python[pandas]
 python-dotenv
+pyarrow
+pandas
+pytest
