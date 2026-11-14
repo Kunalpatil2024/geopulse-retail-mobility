@@ -1,9 +1,12 @@
+import csv
+from math import hypot
 from pathlib import Path
 
 import pytest
 
 from data_synthesis.load_to_snowflake import (
     REQUIRED_ENV_VARS,
+    STORES_PATH,
     build_copy_sql,
     build_put_sql,
     build_store_merge_sql,
@@ -99,12 +102,45 @@ def test_loader_sql_matches_setup_tables_and_spatial_column_conventions():
     stores_sql = build_store_merge_sql(CONFIG)
     zones_sql = build_zone_merge_sql(CONFIG)
 
-    assert "COPY INTO GEOPULSE.RAW.MOBILE_PINGS" in copy_sql
+    assert "COPY INTO GEOPULSE.RAW.DEVICE_PINGS" in copy_sql
     assert "ST_MAKEPOINT($1:long::FLOAT, $1:lat::FLOAT)" in copy_sql
     assert "FORCE = FALSE" in copy_sql
     assert "ST_MAKEPOINT(source.long, source.lat)" in stores_sql
-    assert "MERGE INTO GEOPULSE.RAW.COMMERCIAL_ZONES" in zones_sql
+    assert "MERGE INTO GEOPULSE.RAW.ZONES" in zones_sql
     assert "TO_GEOGRAPHY(source.geometry)" in zones_sql
+
+
+def test_store_reference_data_has_proposed_site_and_control():
+    with STORES_PATH.open(newline="", encoding="utf-8") as store_file:
+        stores = {row["store_name"]: row for row in csv.DictReader(store_file)}
+
+    assert set(stores) == {"Store A", "Store B", "Store C"}
+    assert stores["Store A"]["status"] == "existing"
+    assert stores["Store B"]["status"] == "proposed"
+    assert stores["Store C"]["status"] == "control"
+
+    north_south_m = (
+        float(stores["Store B"]["lat"]) - float(stores["Store A"]["lat"])
+    ) * 111_320
+    east_west_m = (
+        float(stores["Store B"]["long"]) - float(stores["Store A"]["long"])
+    ) * 111_320
+    assert 600 <= hypot(north_south_m, east_west_m) <= 800
+
+
+def test_setup_sql_declares_requested_resources_and_team_grants():
+    setup_sql = (STORES_PATH.parent / "snowflake_setup.sql").read_text(
+        encoding="utf-8"
+    )
+
+    assert "GEOPULSE_WH" in setup_sql
+    assert "WAREHOUSE_SIZE = 'X-SMALL'" in setup_sql
+    assert "AUTO_SUSPEND = 60" in setup_sql
+    assert "GEOPULSE.ANALYTICS" in setup_sql
+    assert "GEOPULSE.RAW.DEVICE_PINGS" in setup_sql
+    assert "GEOPULSE.RAW.STORES" in setup_sql
+    assert "GEOPULSE.RAW.ZONES" in setup_sql
+    assert "GEOPULSE_TEAM_ROLE" in setup_sql
 
 
 def test_audit_sql_covers_counts_bounds_hourly_traffic_and_store_distance():
