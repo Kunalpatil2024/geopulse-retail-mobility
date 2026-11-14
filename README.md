@@ -11,13 +11,26 @@ GeoPulse analyzes anonymized mobile GPS pings to show how foot traffic flows thr
 | M3 | dbt modeling | `dbt_project/` |
 | M4 | Dashboard & Airflow | `dashboard/`, `airflow/` |
 
-## Weekly progress
+## Architecture
 
-- [ ] Week 1
-- [ ] Week 2
-- [ ] Week 3
-- [ ] Week 4
-- [ ] Final review
+```mermaid
+flowchart LR
+    S[Snowflake RAW] --> P[Apache Sedona / PySpark]
+    P --> D[dbt ANALYTICS]
+    D --> K[Kepler.gl dashboard]
+    A[Airflow] -. orchestrates .-> S
+    A -. orchestrates .-> P
+    A -. orchestrates .-> D
+```
+
+## Progress
+
+- [x] M1: synthetic ping generation and Snowflake setup/load tooling
+- [ ] M1: run Snowflake load and pipeline audit in the project account
+- [ ] M2: Sedona/PySpark spatial processing
+- [ ] M3: dbt analytics models
+- [ ] M4: Kepler.gl dashboard and Airflow orchestration
+- [ ] Team: end-to-end validation and final review
 
 ## Setup
 
@@ -39,7 +52,11 @@ GeoPulse analyzes anonymized mobile GPS pings to show how foot traffic flows thr
 
 ## Workflow
 
-Use one branch per member and merge changes via Pull Request. Commit style: `feat:`, `fix:`, `docs:`, or `chore:`.
+Use one branch per member and merge changes via Pull Request. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for branch names, commit style, and PR steps.
+
+The field definitions, units, timezone, Snowflake tables, and team handoffs are
+documented in [docs/DATA_CONTRACT.md](docs/DATA_CONTRACT.md).
 
 ## M1: data synthesis and Snowflake
 

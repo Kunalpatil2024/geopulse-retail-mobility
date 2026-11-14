@@ -6,9 +6,9 @@
    the email verification and account activation steps.
 2. Select an available cloud provider and region, then open the new account in
    Snowsight. Trial options and available regions may vary.
-3. Ensure the role you use can create or use the `GEOPULSE` database, its
-   `RAW` schema, tables, file format, and internal stage. The setup SQL can be
-   run with an administrative role if needed.
+3. Ensure the role you use can create or use the `GEOPULSE_WH` warehouse,
+   `GEOPULSE` database, `RAW` and `ANALYTICS` schemas, and the team role. The
+   setup SQL can be run with an administrative role if needed.
 
 ## 2. Find the account identifier
 
@@ -21,23 +21,19 @@ legacy account locator. Do not include the URL scheme or
 ## 3. Create the database and raw tables
 
 From the repository root, copy `.env.example` to `.env` and enter your account,
-user, password, warehouse, and role. Keep the provided database and schema
-values unless you have also adapted the setup and loader configuration.
+user, password, and role. The warehouse, database, and schema default to
+`GEOPULSE_WH`, `GEOPULSE`, and `RAW`.
 
-The supplied setup SQL expects a database named `GEOPULSE`; create it if your
-trial account does not already have one. For example, in a Snowsight worksheet
-using a role that can create databases:
+Open and run [`snowflake_setup.sql`](snowflake_setup.sql) with a role that can
+create the warehouse, database, schemas, and `GEOPULSE_TEAM_ROLE`. It creates
+the X-Small `GEOPULSE_WH` warehouse (60-second auto-suspend), the `GEOPULSE`
+database, `RAW` and `ANALYTICS` schemas, `DEVICE_PINGS`, `STORES`, and `ZONES`,
+the Parquet file format, and the internal `PING_STAGE`. It seeds all three
+stores and the commercial zones and grants the team role the required access.
+Have an administrator grant `GEOPULSE_TEAM_ROLE` to the Snowflake user that
+will run the loader, then set `SNOWFLAKE_ROLE=GEOPULSE_TEAM_ROLE` in `.env`.
 
-```sql
-CREATE DATABASE IF NOT EXISTS GEOPULSE;
-```
-
-Then open and run [`snowflake_setup.sql`](snowflake_setup.sql) in that database.
-It creates `GEOPULSE.RAW.MOBILE_PINGS`, `GEOPULSE.RAW.STORES`,
-`GEOPULSE.RAW.COMMERCIAL_ZONES`, the Parquet file format, and the internal
-`PING_STAGE`. It also seeds the Store A/Store B metadata and commercial zones.
-
-The loader uses these existing table names and columns from the setup file.
+The loader uses these table names and columns from the setup file.
 Parquet records contain `device_id`, `lat`, `long`, and `timestamp`; loaded
 locations use `ST_MAKEPOINT(long, lat)`. Store and zone records are merged by
 their IDs, and zone geometry is converted with `TO_GEOGRAPHY`.
@@ -64,7 +60,7 @@ python data_synthesis\load_to_snowflake.py
 ```
 
 It reads credentials from `.env`, uploads the Parquet parts to the internal
-stage with parallel `PUT`, copies them into `GEOPULSE.RAW.MOBILE_PINGS`, and
+stage with parallel `PUT`, copies them into `GEOPULSE.RAW.DEVICE_PINGS`, and
 merges `docs\store_locations.csv` and `docs\commercial_zones.geojson` into
 their raw tables. Normal reruns do not reload previously copied Parquet files;
 store and zone merges update matching IDs instead of duplicating them. The

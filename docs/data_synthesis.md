@@ -22,10 +22,12 @@ commercially clustered workplaces, irregular daytime pings, overnight home
 pings, reduced/flatter weekend traffic, leisure trips, and GPS noise.
 
 Store A is the existing site at 19.9975, 73.7898; Store B is a proposed site
-about 390 m north. Each has a 250 m evaluation catchment. Exactly 25% of devices
-in each chunk are assigned morning routes through A, with 30% of that cohort
-also routing through B before A. The route pings are retained on weekdays so
-the scenario can be measured in the generated point data. These are illustrative
+about 700 m north. Store C is a control site. Each has a 250 m evaluation
+catchment. Exactly 25% of devices in each chunk are assigned morning routes
+through A, with 30% of that cohort also routing through B before A. This is a
+synthetic scenario assumption for possible cannibalization, not an observed or
+measured business result. The route pings are retained on weekdays so the
+scenario can be measured in the generated point data. These are illustrative
 synthetic planning coordinates, not surveyed store locations. Store metadata is
 in [`store_locations.csv`](store_locations.csv); commercial zoning polygons are
 in [`commercial_zones.geojson`](commercial_zones.geojson).
@@ -36,5 +38,5 @@ For trial signup, account identifiers, database/table setup, credential
 configuration, and the repeatable loader/audit commands, follow the
 [Snowflake setup guide](SNOWFLAKE_SETUP.md). Run
 [`snowflake_setup.sql`](snowflake_setup.sql) before the loader; it defines the
-`GEOPULSE.RAW.MOBILE_PINGS`, `STORES`, and `COMMERCIAL_ZONES` tables used by the
-scripts here.
+`GEOPULSE.RAW.DEVICE_PINGS`, `STORES`, and `ZONES` tables used by the scripts
+here.
