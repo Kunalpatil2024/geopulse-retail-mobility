@@ -34,7 +34,7 @@ def count_local_parquet_rows(files: list[Path]) -> int:
 
 
 def build_counts_sql(config: Mapping[str, str]) -> str:
-    table = _qualified_name(config, "MOBILE_PINGS")
+    table = _qualified_name(config, "DEVICE_PINGS")
     return (
         f"SELECT COUNT(*), COALESCE(COUNT_IF(location IS NULL), 0) "
         f"FROM {table}"
@@ -42,7 +42,7 @@ def build_counts_sql(config: Mapping[str, str]) -> str:
 
 
 def build_hourly_counts_sql(config: Mapping[str, str]) -> str:
-    table = _qualified_name(config, "MOBILE_PINGS")
+    table = _qualified_name(config, "DEVICE_PINGS")
     return (
         f"SELECT DATE_PART('HOUR', timestamp_utc)::INTEGER AS hour_of_day, "
         f"COUNT(*) AS ping_count FROM {table} "
@@ -51,7 +51,7 @@ def build_hourly_counts_sql(config: Mapping[str, str]) -> str:
 
 
 def build_bounds_sql(config: Mapping[str, str]) -> str:
-    table = _qualified_name(config, "MOBILE_PINGS")
+    table = _qualified_name(config, "DEVICE_PINGS")
     bounds = CITY_BOUNDS
     return f"""SELECT COALESCE(COUNT_IF(
   lat < {bounds['min_lat']} OR lat > {bounds['max_lat']}
@@ -61,7 +61,7 @@ FROM {table}"""
 
 
 def build_store_proximity_sql(config: Mapping[str, str]) -> str:
-    pings = _qualified_name(config, "MOBILE_PINGS")
+    pings = _qualified_name(config, "DEVICE_PINGS")
     stores = _qualified_name(config, "STORES")
     return f"""SELECT s.store_name,
   COUNT_IF(ST_DWITHIN(p.location, s.location, 500)) AS nearby_pings

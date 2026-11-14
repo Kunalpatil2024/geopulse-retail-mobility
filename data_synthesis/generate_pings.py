@@ -16,7 +16,7 @@ import pyarrow.parquet as pq
 CITY_LAT = 19.9975
 CITY_LONG = 73.7898
 STORE_A = (19.9975, 73.7898)
-STORE_B = (20.0010, 73.7898)
+STORE_B = (20.0038, 73.7898)
 PING_COLUMNS = ("device_id", "lat", "long", "timestamp")
 SLOT_MINUTES = np.concatenate(
     (

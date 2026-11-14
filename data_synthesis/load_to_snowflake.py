@@ -113,7 +113,7 @@ def build_copy_sql(config: Mapping[str, str], force: bool = False) -> str:
     schema = config["schema"]
     stage = _qualified_name(config, "PING_STAGE")
     file_format = _qualified_name(config, "PING_PARQUET")
-    return f"""COPY INTO {database}.{schema}.MOBILE_PINGS
+    return f"""COPY INTO {database}.{schema}.DEVICE_PINGS
   (device_id, lat, long, timestamp_utc, location)
 FROM (
   SELECT
@@ -149,7 +149,7 @@ WHEN NOT MATCHED THEN INSERT (
 
 
 def build_zone_merge_sql(config: Mapping[str, str]) -> str:
-    target = _qualified_name(config, "COMMERCIAL_ZONES")
+    target = _qualified_name(config, "ZONES")
     return f"""MERGE INTO {target} AS target
 USING ZONES_INPUT AS source
 ON target.zone_id = source.zone_id
@@ -212,7 +212,7 @@ def load_data(
         stage = _qualified_name(config, "PING_STAGE")
         with connection.cursor() as cursor:
             if truncate:
-                for table in ("MOBILE_PINGS", "STORES", "COMMERCIAL_ZONES"):
+                for table in ("DEVICE_PINGS", "STORES", "ZONES"):
                     cursor.execute(
                         f"TRUNCATE TABLE {_qualified_name(config, table)}"
                     )
@@ -222,7 +222,7 @@ def load_data(
         _load_reference_data(connection, config)
         counts = {}
         with connection.cursor() as cursor:
-            for table in ("MOBILE_PINGS", "STORES", "COMMERCIAL_ZONES"):
+            for table in ("DEVICE_PINGS", "STORES", "ZONES"):
                 cursor.execute(
                     f"SELECT COUNT(*) FROM {_qualified_name(config, table)}"
                 )
