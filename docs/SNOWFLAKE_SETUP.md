@@ -87,7 +87,12 @@ python data_synthesis\pipeline_check.py
 The audit prints PASS/FAIL for the local-versus-Snowflake ping count, NULL
 locations, morning/evening hourly traffic versus night traffic, the city
 bounding box (latitude 19.85–20.15, longitude 73.60–74.00), and pings within
-500 m of both stores. It writes the results to
+500 m of both stores. It also checks that 25%-35% of distinct weekday
+commuters with a Store A visit within 500 m at 8:28–8:32 a.m. also have a
+Store B visit within 500 m at 8:13–8:17 a.m. These jitter-tolerant windows
+match the generator's Store B-to-Store A route anchors. This overlap is a
+synthetic cannibalization scenario, not an observed business result. The audit
+writes its results to
 [`pipeline_audit.md`](pipeline_audit.md) and exits with status 1 if any check
 fails. Keep the same local Parquet files that were loaded for the row-count
 comparison.
