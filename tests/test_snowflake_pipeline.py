@@ -15,7 +15,9 @@ from data_synthesis.load_to_snowflake import (
     load_snowflake_config,
 )
 from data_synthesis.pipeline_check import (
+    _cannibalization_result,
     build_bounds_sql,
+    build_cannibalization_sql,
     build_counts_sql,
     build_hourly_counts_sql,
     build_store_proximity_sql,
@@ -150,3 +152,36 @@ def test_audit_sql_covers_counts_bounds_hourly_traffic_and_store_distance():
     proximity_sql = build_store_proximity_sql(CONFIG)
     assert "ST_DWITHIN(p.location, s.location, 500)" in proximity_sql
     assert "'Store A', 'Store B'" in proximity_sql
+
+
+def test_cannibalization_sql_counts_weekday_morning_store_visits():
+    sql = build_cannibalization_sql(CONFIG)
+
+    assert "GEOPULSE.RAW.DEVICE_PINGS" in sql
+    assert "GEOPULSE.RAW.STORES" in sql
+    assert "ST_DWITHIN(p.location, s.location, 500)" in sql
+    assert "DATE_PART('DOWISO', p.timestamp_utc)::INTEGER BETWEEN 1 AND 5" in sql
+    assert "DATE_PART('HOUR', p.timestamp_utc)::INTEGER = 8" in sql
+    assert "DATE_PART('MINUTE', p.timestamp_utc)::INTEGER BETWEEN 28 AND 32" in sql
+    assert "DATE_PART('MINUTE', p.timestamp_utc)::INTEGER BETWEEN 13 AND 17" in sql
+    assert "GROUP BY p.device_id" in sql
+
+
+@pytest.mark.parametrize("shared_devices,store_a_devices", [(25, 100), (35, 100)])
+def test_cannibalization_result_includes_tolerance_boundaries(
+    shared_devices: int, store_a_devices: int
+):
+    _, passed, details = _cannibalization_result(shared_devices, store_a_devices)
+
+    assert passed
+    assert f"{shared_devices / store_a_devices:.1%}" in details
+
+
+@pytest.mark.parametrize("shared_devices,store_a_devices", [(24, 100), (36, 100), (0, 0)])
+def test_cannibalization_result_fails_outside_tolerance_or_without_store_a_visits(
+    shared_devices: int, store_a_devices: int
+):
+    _, passed, details = _cannibalization_result(shared_devices, store_a_devices)
+
+    assert not passed
+    assert "expected 25.0%-35.0%" in details
