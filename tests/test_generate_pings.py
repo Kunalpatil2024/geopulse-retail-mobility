@@ -24,6 +24,61 @@ class GeneratePingsTests(unittest.TestCase):
         self.assertEqual(int(route_b.sum()), 150)
         self.assertTrue((route_b <= route_a).all())
 
+    def test_generated_morning_store_visits_match_cannibalization_scenario(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            out_dir = Path(temporary_directory) / "pings"
+            generate_dataset(
+                devices=2_000,
+                days=2,
+                out_dir=out_dir,
+                seed=42,
+                chunk_devices=10_000,
+                sample_path=None,
+            )
+            pings = pd.concat(
+                [pd.read_parquet(path) for path in sorted(out_dir.glob("part-*.parquet"))],
+                ignore_index=True,
+            )
+
+        timestamps = pd.to_datetime(pings["timestamp"], utc=True)
+        pings = pings.loc[timestamps.dt.day_of_week < 5].copy()
+        timestamps = timestamps.loc[pings.index]
+        lat_radians = np.deg2rad(pings["lat"].to_numpy())
+
+        def within_500m(store_lat: float, store_long: float) -> np.ndarray:
+            store_lat_radians = np.deg2rad(store_lat)
+            delta_lat = lat_radians - store_lat_radians
+            delta_long = np.deg2rad(pings["long"].to_numpy() - store_long)
+            haversine = (
+                np.sin(delta_lat / 2) ** 2
+                + np.cos(lat_radians)
+                * np.cos(store_lat_radians)
+                * np.sin(delta_long / 2) ** 2
+            )
+            distance_m = 6_371_000 * 2 * np.arcsin(np.sqrt(haversine))
+            return distance_m <= 500
+
+        pings["near_a"] = within_500m(19.9975, 73.7898)
+        pings["near_b"] = within_500m(20.0038, 73.7898)
+        hours = timestamps.dt.hour
+        minutes = timestamps.dt.minute
+        store_a_devices = set(
+            pings.loc[
+                (hours == 8) & minutes.between(28, 32) & pings["near_a"],
+                "device_id",
+            ]
+        )
+        store_b_devices = set(
+            pings.loc[
+                (hours == 8) & minutes.between(13, 17) & pings["near_b"],
+                "device_id",
+            ]
+        )
+
+        share = len(store_a_devices & store_b_devices) / len(store_a_devices)
+        self.assertGreaterEqual(share, 0.25)
+        self.assertLessEqual(share, 0.35)
+
     def test_cli_defaults(self):
         args = build_parser().parse_args([])
 

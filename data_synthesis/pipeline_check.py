@@ -71,6 +71,45 @@ WHERE s.store_name IN ('Store A', 'Store B')
 GROUP BY s.store_name"""
 
 
+def build_cannibalization_sql(config: Mapping[str, str]) -> str:
+    pings = _qualified_name(config, "DEVICE_PINGS")
+    stores = _qualified_name(config, "STORES")
+    return f"""SELECT
+  COUNT_IF(visited_a AND visited_b) AS shared_devices,
+  COUNT_IF(visited_a) AS store_a_devices
+FROM (
+  SELECT p.device_id,
+    COUNT_IF(s.store_name = 'Store A'
+      AND DATE_PART('MINUTE', p.timestamp_utc)::INTEGER BETWEEN 28 AND 32
+      AND ST_DWITHIN(p.location, s.location, 500)) > 0 AS visited_a,
+    COUNT_IF(s.store_name = 'Store B'
+      AND DATE_PART('MINUTE', p.timestamp_utc)::INTEGER BETWEEN 13 AND 17
+      AND ST_DWITHIN(p.location, s.location, 500)) > 0 AS visited_b
+  FROM {pings} AS p
+  CROSS JOIN {stores} AS s
+  WHERE s.store_name IN ('Store A', 'Store B')
+    AND DATE_PART('DOWISO', p.timestamp_utc)::INTEGER BETWEEN 1 AND 5
+    AND DATE_PART('HOUR', p.timestamp_utc)::INTEGER = 8
+    AND DATE_PART('MINUTE', p.timestamp_utc)::INTEGER BETWEEN 13 AND 32
+  GROUP BY p.device_id
+)"""
+
+
+def _cannibalization_result(
+    shared_devices: int, store_a_devices: int
+) -> tuple[str, bool, str]:
+    share = shared_devices / store_a_devices if store_a_devices else 0.0
+    return (
+        "Store B overlap with Store A morning commuters (30% +/- 5%)",
+        store_a_devices > 0 and 0.25 <= share <= 0.35,
+        (
+            f"{shared_devices:,} of {store_a_devices:,} Store A devices at "
+            f"08:28-08:32 also visited Store B at 08:13-08:17 ({share:.1%}; "
+            f"expected 25.0%-35.0%)."
+        ),
+    )
+
+
 def _format_audit(
     results: list[tuple[str, bool, str]],
     local_rows: int,
@@ -112,6 +151,9 @@ def run_audit(
 
             cursor.execute(build_store_proximity_sql(config))
             store_counts = {name: int(count) for name, count in cursor.fetchall()}
+
+            cursor.execute(build_cannibalization_sql(config))
+            shared_devices, store_a_devices = map(int, cursor.fetchone())
     finally:
         connection.close()
 
@@ -158,6 +200,7 @@ def run_audit(
                 f"Store B: {store_counts.get('Store B', 0):,}."
             ),
         ),
+        _cannibalization_result(shared_devices, store_a_devices),
     ]
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(
