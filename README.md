@@ -12,6 +12,7 @@ The goal is to help retailers identify high-traffic areas and understand potenti
 - Calculate hourly store footfall using dbt.
 - Visualize customer movement using Kepler.gl.
 - Automate workflows using Apache Airflow.
+- Validate synthetic GPS records before loading them into the analytics pipeline.
 
 ## Tech Stack
 
@@ -38,6 +39,22 @@ geopulse-retail-mobility/
 └── README.md
 ```
 
+## Data Quality & Validation
+
+The planned GPS validation module, `data_synthesis/validate_pings.py`, checks
+for missing values, duplicate GPS records, invalid latitude and longitude, and
+invalid timestamps. The module is not present in the repository yet, so these
+checks are not currently implemented.
+
+Once the module is added, run it from the project root:
+
+```bash
+python data_synthesis/validate_pings.py
+```
+
+The expected generated report is `docs/data_quality_report.json`; it is not
+present until the validator is implemented and run.
+
 ## Current Progress
 
 - [x] Project structure created
@@ -46,6 +63,7 @@ geopulse-retail-mobility/
 - [x] Snowflake setup SQL
 - [x] Snowflake loader
 - [x] Data contract and documentation
+- [ ] GPS data quality validation (`data_synthesis/validate_pings.py` and report pending)
 - [ ] Complete Snowflake pipeline validation
 - [ ] Spatial joins using Sedona
 - [ ] dbt analytics models
